@@ -1,6 +1,6 @@
 name: otel_ipdata
 description: "Dartastic OpenTelemetry bridge for ipdata (IP geolocation + threat intel: known abuser, attack source, bogon, Tor)."
-version: 0.1.0-beta.2
+version: 0.1.0-beta.3-wip
 repository: https://github.com/dartastic/otel_ipdata
 homepage: https://dartastic.io
 publish_to: https://pub.dartastic.io
