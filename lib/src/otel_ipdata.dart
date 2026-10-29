@@ -1,15 +1,16 @@
-// Licensed under the Dartastic Pro Software License Agreement.
+// Licensed under the Apache License, Version 2.0
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
-import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
+import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_ipdata_suppression.dart';
 
 const _tracerName = 'dartastic_otel_libs_ipdata';
 
-Tracer _tracer() => OTel.tracerProvider().getTracer(_tracerName);
+APITracer _tracer() => OTelAPI.tracerProvider().getTracer(_tracerName);
 
 class IpdataResult {
+  /// Creates a result.
   const IpdataResult({
     this.countryCode,
     this.asn,
@@ -61,8 +62,13 @@ class IpdataResult {
   final int? statusCode;
 }
 
+/// What a traced call returned: the value for the caller plus fields
+/// recorded on the span.
 class IpdataCallResult<T> {
+  /// Creates a call result.
   const IpdataCallResult({required this.value, this.result});
+
+  /// The value returned to the caller.
   final T value;
   final IpdataResult? result;
 }
@@ -88,7 +94,7 @@ Future<T> tracedIpdata<T>({
   final span = _tracer().startSpan(
     'ipdata $operation',
     kind: SpanKind.client,
-    attributes: OTel.attributesFromMap(m),
+    attributes: OTelAPI.attributesFromMap(m),
   );
   try {
     final r = await invoke();
@@ -96,28 +102,28 @@ Future<T> tracedIpdata<T>({
       final extras = <Attribute<Object>>[];
       if (r.result!.countryCode != null) {
         extras.add(
-          OTel.attributeString(
+          OTelAPI.attributeString(
             'ipdata.country.iso_code',
             r.result!.countryCode!,
           ),
         );
       }
       if (r.result!.asn != null) {
-        extras.add(OTel.attributeInt('ipdata.asn', r.result!.asn!));
+        extras.add(OTelAPI.attributeInt('ipdata.asn', r.result!.asn!));
       }
       if (r.result!.isTor != null) {
         extras.add(
-          OTel.attributeBool('ipdata.threat.is_tor', r.result!.isTor!),
+          OTelAPI.attributeBool('ipdata.threat.is_tor', r.result!.isTor!),
         );
       }
       if (r.result!.isProxy != null) {
         extras.add(
-          OTel.attributeBool('ipdata.threat.is_proxy', r.result!.isProxy!),
+          OTelAPI.attributeBool('ipdata.threat.is_proxy', r.result!.isProxy!),
         );
       }
       if (r.result!.isAnonymous != null) {
         extras.add(
-          OTel.attributeBool(
+          OTelAPI.attributeBool(
             'ipdata.threat.is_anonymous',
             r.result!.isAnonymous!,
           ),
@@ -125,7 +131,7 @@ Future<T> tracedIpdata<T>({
       }
       if (r.result!.isKnownAttacker != null) {
         extras.add(
-          OTel.attributeBool(
+          OTelAPI.attributeBool(
             'ipdata.threat.is_known_attacker',
             r.result!.isKnownAttacker!,
           ),
@@ -133,7 +139,7 @@ Future<T> tracedIpdata<T>({
       }
       if (r.result!.isKnownAbuser != null) {
         extras.add(
-          OTel.attributeBool(
+          OTelAPI.attributeBool(
             'ipdata.threat.is_known_abuser',
             r.result!.isKnownAbuser!,
           ),
@@ -141,27 +147,29 @@ Future<T> tracedIpdata<T>({
       }
       if (r.result!.isThreat != null) {
         extras.add(
-          OTel.attributeBool('ipdata.threat.is_threat', r.result!.isThreat!),
+          OTelAPI.attributeBool('ipdata.threat.is_threat', r.result!.isThreat!),
         );
       }
       if (r.result!.isBogon != null) {
         extras.add(
-          OTel.attributeBool('ipdata.threat.is_bogon', r.result!.isBogon!),
+          OTelAPI.attributeBool('ipdata.threat.is_bogon', r.result!.isBogon!),
         );
       }
       if (r.result!.threatScore != null) {
         extras.add(
-          OTel.attributeInt('ipdata.threat.score', r.result!.threatScore!),
+          OTelAPI.attributeInt('ipdata.threat.score', r.result!.threatScore!),
         );
       }
       if (r.result!.itemsReturned != null) {
         extras.add(
-          OTel.attributeInt('ipdata.items_returned', r.result!.itemsReturned!),
+          OTelAPI.attributeInt(
+              'ipdata.items_returned', r.result!.itemsReturned!),
         );
       }
       if (r.result!.statusCode != null) {
         extras.add(
-          OTel.attributeInt('http.response.status_code', r.result!.statusCode!),
+          OTelAPI.attributeInt(
+              'http.response.status_code', r.result!.statusCode!),
         );
         if (r.result!.statusCode! >= 400) {
           span.setStatus(
@@ -170,14 +178,14 @@ Future<T> tracedIpdata<T>({
           );
         }
       }
-      if (extras.isNotEmpty) span.addAttributes(OTel.attributes(extras));
+      if (extras.isNotEmpty) span.addAttributes(OTelAPI.attributes(extras));
     }
     return r.value;
   } catch (e, st) {
     span.addAttributes(
-      OTel.attributes([
-        OTel.attributeString(
-          ErrorResource.errorType.key,
+      OTelAPI.attributes([
+        OTelAPI.attributeString(
+          ErrorAttributes.errorType.key,
           e.runtimeType.toString(),
         ),
       ]),
